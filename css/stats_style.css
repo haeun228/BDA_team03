@@ -2,22 +2,26 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f8f8f8;
+    background-color: #ffffff;
 }
 
 .content-container {
     padding: 20px 50px;
 }
+
+h1{
+    padding-left: 7%;
+}
+
 .data-table-wrapper {
-    border: 1px solid #ccc;
     padding: 20px;
     background-color: white;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 .data-table {
-    width: 100%;
+    width: 85%;
     border-collapse: collapse;
     font-size: 1.1em;
+    margin: 0 auto;
 }
 .data-table th, .data-table td {
     border: 1px solid #ddd;
