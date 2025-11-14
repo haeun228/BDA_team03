@@ -1,0 +1,61 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8;
+}
+
+.content-container {
+    padding: 20px 50px;
+}
+.data-table-wrapper {
+    border: 1px solid #ccc;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.1em;
+}
+.data-table th, .data-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+.data-table th {
+    background-color: #f2f2f2;
+    font-weight: normal;
+    position: relative;
+    padding-right: 25px;
+}
+
+.sort-button {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    text-decoration: none;
+}
+
+/* 아이콘의 기본 스타일 */
+.sort-icon {
+    font-size: 0.8em;
+    color: #333; /* 기본 색상 */
+    display: inline-block;
+}
+
+/* 선택 안 함 상태의 아이콘 색상 (흐릿하게) */
+.sort-button[data-sort="none"] .sort-icon {
+    color: #aaa;
+    /* ▲▼ 텍스트를 한 줄에 표시하여 기본 상태를 나타냄 */
+    font-size: 0.7em;
+}
+
+/* 활성화된 정렬 아이콘 (오름차순/내림차순) 색상 */
+.sort-button[data-sort="asc"] .sort-icon,
+.sort-button[data-sort="desc"] .sort-icon {
+    color: #f47320; /* 활성화된 색상 */
+    font-size: 1em; /* 조금 더 크게 표시 */
+}
