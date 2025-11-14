@@ -4,10 +4,13 @@ include("config.php");
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Team03 Project</title>
+    <title>My Seoul Food</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h1>Welcome to Team03 Project</h1>
+<?php
+header("Location: pages/list_restaurants.php");
+exit;
+?>
 </body>
 </html>
