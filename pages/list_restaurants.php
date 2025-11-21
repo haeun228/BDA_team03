@@ -20,6 +20,7 @@ FROM Review;
 
 // 0. 공통 설정 ---------------------------------------------------
 date_default_timezone_set('Asia/Seoul');
+session_start();
 require_once __DIR__ . '/../config.php';
 
 // $mysqli = new mysqli($host, $user, $pass, $dbname);
@@ -148,6 +149,12 @@ $now = date('H:i:s');
     <meta charset="UTF-8">
     <title>My Seoul Food - 전체 맛집 조회</title>
     <style>
+        .page-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px; /* 좌우 패딩 */
+            }
+
         body {
             margin: 0;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -256,7 +263,14 @@ $now = date('H:i:s');
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            cursor: pointer;              
+            transition: background 0.15s;   
+
         }
+        .restaurant-item:hover {
+        background-color: #fdf4ec; 
+        }
+
         .rank-num {
             font-size: 20px;
             font-weight: 700;
@@ -317,18 +331,15 @@ $now = date('H:i:s');
             color: #f47320;
             font-weight: 700;
         }
+        
     </style>
 </head>
 <body>
 
-<header class="header">
-    <div class="logo">My Seoul Food 🍽️</div>
-    <div class="nav-right">
-        <button class="login-btn">Login</button>
-    </div>
-</header>
+<?php include dirname(__DIR__) . '/menu.php'; ?>
 
-<!-- 지도 로고(지역) + 정렬 드롭다운 -->
+<div class="page-wrapper">
+    <!-- 지도 로고(지역) + 정렬 드롭다운 -->
 <div class="filter-bar">
     <!-- 1) 지역 드롭다운 -->
     <div class="dropdown">
@@ -398,8 +409,10 @@ $now = date('H:i:s');
 
             $avgRating     = number_format($row['avg_rating'], 1);
             $bookmarkCount = (int)$row['bookmark_count'];
+            $detailUrl = 'view_restaurant.php?id=' . (int)$row['restaurant_id'];
+
         ?>
-        <div class="restaurant-item">
+        <div class="restaurant-item" onclick="location.href='<?php echo $detailUrl; ?>'">
             <div class="rank-num"><?php echo $rank++; ?>.</div>
 
             <div>
@@ -450,6 +463,7 @@ $now = date('H:i:s');
         document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
     });
 </script>
+</div>
 
 </body>
 </html>
