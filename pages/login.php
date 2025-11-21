@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
 
-            header("Location: /BDA_TEAM03/index.php");
+            header("Location: ../index.php");
             exit;
 
         } else {
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['username'] = $username;
         $_SESSION['role'] = "USER";
 
-        header("Location: /BDA_TEAM03/index.php");
+        header("Location: ../index.php");
         exit;
     }
 
