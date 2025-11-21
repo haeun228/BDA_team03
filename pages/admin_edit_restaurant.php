@@ -267,6 +267,9 @@ input[type=number]::-webkit-outer-spin-button {
 </style>
 
 <body>
+
+<?php include '../menu.php'; ?>
+
 <div class="form-container">
     <h2>식당 수정</h2>
     <form method="post">
