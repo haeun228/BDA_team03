@@ -1,5 +1,6 @@
 <?php
 include("../config.php");
+include ("../menu.php");
 
 // 1. GET 요청 변수 초기화 및 정리 (SQL 인젝션 방지 포함)
 $default_sort_col = 'category_name';
@@ -62,7 +63,7 @@ if (!$res) {
     </head>
     <body>
     <div class="content-container">
-        <h1>지역별 통계</h1>
+        <h1>메뉴 유형별 통계</h1>
 
         <div class="data-table-wrapper">
             <table class="data-table">
