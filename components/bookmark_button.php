@@ -9,7 +9,7 @@ $handler_path = '../handlers/handle_bookmark.php';
 
 <div class="bookmark">
   <button class="bookmark-btn" 
-      onclick="location.href='<?php echo $handler_path; ?>?action=<?php echo $is_bookmarked ? 'remove' : 'add'; ?>&restaurant_id=<?php echo $restaurant_id; ?>'">
+      onclick="location.href='<?php echo $handler_path; ?>?action=<?php echo $is_bookmarked ? 'remove' : 'add'; ?>&id=<?php echo $restaurant_id; ?>'">
       
     <svg class="bookmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
       <path 

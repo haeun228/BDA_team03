@@ -454,3 +454,41 @@ INSERT INTO Closed_Days (restaurant_id, day) VALUES
 (94, 'SUN'),
 (96, 'SUN'),
 (100, 'MON');
+
+-- USER 30개 계정
+INSERT INTO `User` (`role`, `password`, `username`)
+VALUES 
+('USER', 'user1', 'user1'),
+('USER', 'user2', 'user2'),
+('USER', 'user3', 'user3'),
+('USER', 'user4', 'user4'),
+('USER', 'user5', 'user5'),
+('USER', 'user6', 'user6'),
+('USER', 'user7', 'user7'),
+('USER', 'user8', 'user8'),
+('USER', 'user9', 'user9'),
+('USER', 'user10', 'user10'),
+('USER', 'user11', 'user11'),
+('USER', 'user12', 'user12'),
+('USER', 'user13', 'user13'),
+('USER', 'user14', 'user14'),
+('USER', 'user15', 'user15'),
+('USER', 'user16', 'user16'),
+('USER', 'user17', 'user17'),
+('USER', 'user18', 'user18'),
+('USER', 'user19', 'user19'),
+('USER', 'user20', 'user20'),
+('USER', 'user21', 'user21'),
+('USER', 'user22', 'user22'),
+('USER', 'user23', 'user23'),
+('USER', 'user24', 'user24'),
+('USER', 'user25', 'user25'),
+('USER', 'user26', 'user26'),
+('USER', 'user27', 'user27'),
+('USER', 'user28', 'user28'),
+('USER', 'user29', 'user29'),
+('USER', 'user30', 'user30');
+
+-- ADMIN 계정
+INSERT INTO `User` (`role`, `password`, `username`)
+VALUES ('ADMIN', 'admin', 'admin');
