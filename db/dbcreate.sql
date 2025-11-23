@@ -82,3 +82,7 @@ CREATE TABLE `Closed_Days` (
     PRIMARY KEY (`closed_days_id`),
     CONSTRAINT `FK_ClosedDays_Restaurant` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant`(`restaurant_id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+CREATE INDEX idx_review_restaurant ON Review(restaurant_id);
+
+

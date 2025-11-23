@@ -1,6 +1,7 @@
+<!--
+2276278 정서윤
+-->
 <?php
-// 2276278 정서윤
-// analysis_review.php
 // Rollup 및 Drill Down 분석을 통해 서울 10개 구의 맛집 평점 추이 분석 페이지
 include_once '../config.php';
 session_start();
@@ -24,18 +25,18 @@ if ($selected_year) {
     $sql = "
         SELECT 
             reg.region_name AS district,
-            AVG(CASE WHEN QUARTER(r.visit_date) = 1 
+            AVG(CASE WHEN QUARTER(r.visited_at) = 1 
                  THEN (r.taste + r.cleanliness + r.kindness) / 3 END) AS q1,
-            AVG(CASE WHEN QUARTER(r.visit_date) = 2 
+            AVG(CASE WHEN QUARTER(r.visited_at) = 2 
                  THEN (r.taste + r.cleanliness + r.kindness) / 3 END) AS q2,
-            AVG(CASE WHEN QUARTER(r.visit_date) = 3 
+            AVG(CASE WHEN QUARTER(r.visited_at) = 3 
                  THEN (r.taste + r.cleanliness + r.kindness) / 3 END) AS q3,
-            AVG(CASE WHEN QUARTER(r.visit_date) = 4 
+            AVG(CASE WHEN QUARTER(r.visited_at) = 4 
                  THEN (r.taste + r.cleanliness + r.kindness) / 3 END) AS q4
         FROM Review r
         JOIN Restaurant res ON r.restaurant_id = res.restaurant_id
         JOIN Region reg ON res.region_id = reg.region_id
-        WHERE YEAR(r.visit_date) = ?
+        WHERE YEAR(r.visited_at) = ?
         GROUP BY reg.region_name
         ORDER BY reg.region_name
     ";
@@ -54,12 +55,12 @@ if ($selected_year) {
 } else {
     $sql = "
         SELECT 
-            YEAR(r.visit_date) AS year,
+            YEAR(r.visited_at) AS year,
             AVG((r.taste + r.cleanliness + r.kindness) / 3) AS avg_score,
             COUNT(*) AS review_count
         FROM Review r
-        WHERE YEAR(r.visit_date) BETWEEN ? AND ?
-        GROUP BY YEAR(r.visit_date)
+        WHERE YEAR(r.visited_at) BETWEEN ? AND ?
+        GROUP BY YEAR(r.visited_at)
         ORDER BY year
     ";
 
@@ -130,7 +131,7 @@ th{background:#eee;font-weight:700;}
         <table class="drilldown-table">
             <thead>
                 <tr>
-                    <th>지역 (구)</th>
+                    <th>지역</th>
                     <th>1분기 평균</th>
                     <th>2분기 평균</th>
                     <th>3분기 평균</th>
