@@ -1,21 +1,8 @@
 <?php
+// 2276278 정서윤
 // restaurants.php
 // 기본 색 #f47320
 // 서브 색 #fcc6a2
-// 사용자 한 명이 작성한 리뷰 -> 한 리뷰의 점수 평균 -> 뷰 만들?말?
-// 여러 리뷰의 평균 -> 식당별 최종 평점
-
-/* 
-뷰 집어넣을거면 create review 문 뒤에 넣어줄 것
-CREATE VIEW Review_Score AS
-SELECT
-    review_id,
-    restaurant_id,
-    user_id,
-    (taste + cleanliness + kindness) / 3 AS score
-FROM Review;
-
-*/
 
 
 // 0. 공통 설정 ---------------------------------------------------
@@ -23,10 +10,6 @@ date_default_timezone_set('Asia/Seoul');
 session_start();
 require_once __DIR__ . '/../config.php';
 
-// $mysqli = new mysqli($host, $user, $pass, $dbname);
-// if ($mysqli->connect_errno) {
-//     die('DB 연결 실패: ' . $mysqli->connect_error);
-// }
 
 // 1. 드롭다운 옵션 정의 ------------------------------------------
 // 화면에 보여줄 이름 (url 에 보여줄 영어 키)
@@ -88,12 +71,19 @@ $dayMap = [
 ];
 $todayEnum = $dayMap[$phpDay];
 
+if ($currentSortKey === 'bookmark') {
+    $orderByForRank = "bookmark_count DESC, avg_rating DESC";
+} else {
+    $orderByForRank = "avg_rating DESC, bookmark_count DESC";
+}
+
+
 // 4. SQL 만들기 ---------------------------------------------------
 // - Restaurant + Region + Category
 // - Review 로 평점 계산 : (맛 + 청결도 + 친절도)/3 를 평균
 // - Bookmark 개수 계산
 // - 오늘 요일이 휴무인지(Closed_Days)도 같이 가져오기
-$sql = "
+$baseSql= "
     SELECT
         r.restaurant_id,
         r.name,
@@ -112,31 +102,52 @@ $sql = "
     LEFT JOIN Bookmark bm ON bm.restaurant_id   = r.restaurant_id
     LEFT JOIN Closed_Days cd 
            ON cd.restaurant_id = r.restaurant_id 
-          AND cd.day = '$todayEnum'
+          AND cd.day = ?
     WHERE r.is_active = 1
 ";
+
+$paramTypes = "s";        // 첫 번째 파라미터: $todayEnum (string)
+$params     = [$todayEnum];
 
 // 지역 필터
 if ($currentRegionKey !== 'all') {
     $regionId = (int) $regionIdMap[$currentRegionKey];
-    $sql .= " AND r.region_id = $regionId ";
+    $baseSql .= " AND r.region_id = ? ";
+    $paramTypes .= "i";
+    $params[] = $regionId;
 }
 
-$sql .= " GROUP BY r.restaurant_id ";
+$baseSql .= " GROUP BY r.restaurant_id ";
 
-// 정렬 기준
-if ($currentSortKey === 'bookmark') {
-    $sql .= " ORDER BY bookmark_count DESC, avg_rating DESC ";
-} else { // rating
-    $sql .= " ORDER BY avg_rating DESC, bookmark_count DESC ";
+$finalSql = "
+    SELECT
+        sub.*,
+        RANK() OVER (ORDER BY $orderByForRank) AS ranking
+    FROM (
+        $baseSql
+    ) AS sub
+    ORDER BY ranking
+    LIMIT 30
+";
+
+$stmt = $conn->prepare($finalSql);
+if (!$stmt) {
+    die('PreparedStatement 준비 실패: ' . $conn->error);
 }
 
-// 무한스크롤 하기 전까지는 일단 30개만
-$sql .= " LIMIT 30 ";
+// 파라미터 바인딩 (요일, 지역)
+if (!empty($params)) {
+    // PHP 5.6 이상에서 ... (splat 연산자)로 배열을 펼쳐서 전달
+    $stmt->bind_param($paramTypes, ...$params);
+}
 
-$result = $conn->query($sql);
+if (!$stmt->execute()) {
+    die('쿼리 실행 오류: ' . $stmt->error);
+}
+
+$result = $stmt->get_result();
 if (!$result) {
-    die('쿼리 오류: ' . $conn->error);
+    die('결과 가져오기 오류: ' . $stmt->error);
 }
 
 // 현재 시간 (OPEN/CLOSED) 계산용
@@ -410,6 +421,8 @@ $now = date('H:i:s');
             $avgRating     = number_format($row['avg_rating'], 1);
             $bookmarkCount = (int)$row['bookmark_count'];
             $detailUrl = 'view_restaurant.php?id=' . (int)$row['restaurant_id'];
+
+            $rankNumber    = (int)$row['ranking'];
 
         ?>
         <div class="restaurant-item" onclick="location.href='<?php echo $detailUrl; ?>'">
