@@ -1,3 +1,6 @@
+<!--
+2271018 조하은
+-->
 <?php
 include_once '../config.php';
 session_start();
@@ -6,7 +9,7 @@ $user_id = $_SESSION['user_id'] ?? null;
 $restaurant_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $action = $_GET['action'] ?? '';
 
-$redirect_url = $_SERVER['HTTP_REFERER'] ?? 'index.php';
+$redirect_url = $_SERVER['HTTP_REFERER'] ?? '../index.php';
 
 if (!$user_id) {
     echo "<script>
@@ -17,7 +20,7 @@ if (!$user_id) {
 }
 
 if ($restaurant_id <= 0 || !in_array($action, ['add', 'remove'])) {
-    header("Location: index.php"); 
+    header("Location: ../index.php"); 
     exit;
 }
 
@@ -39,7 +42,7 @@ try {
 
 } catch (Exception $e) {
     error_log("Bookmark Error: " . $e->getMessage());
-    header("Location: view_restaurant.php?id=" . $restaurant_id . "&error=db_failure");
+    header("Location: ../pages/view_restaurant.php?id=" . $restaurant_id . "&error=db_failure");
     exit;
 }
 ?>

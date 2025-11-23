@@ -1,3 +1,6 @@
+<!--
+2271018 조하은
+-->
 <?php
 include_once '../config.php';
 
@@ -34,29 +37,30 @@ if ($row = $result->fetch_assoc()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $taste = intval($_POST['taste']);
-    $cleanliness = intval($_POST['cleanliness']);
-    $kindness = intval($_POST['kindness']);
+  $visited_at = $_POST['visited_at'];
+  $taste = intval($_POST['taste']);
+  $cleanliness = intval($_POST['cleanliness']);
+  $kindness = intval($_POST['kindness']);
 
-    $check_sql = "SELECT * FROM Review WHERE restaurant_id=? AND user_id=?";
-    $stmt_check = $conn->prepare($check_sql);
-    $stmt_check->bind_param("ii", $restaurant_id, $user_id);
-    $stmt_check->execute();
-    $result_check = $stmt_check->get_result();
+  $check_sql = "SELECT * FROM Review WHERE restaurant_id=? AND user_id=?";
+  $stmt_check = $conn->prepare($check_sql);
+  $stmt_check->bind_param("ii", $restaurant_id, $user_id);
+  $stmt_check->execute();
+  $result_check = $stmt_check->get_result();
 
-    if ($result_check->num_rows > 0) {
-        $error = "이미 리뷰를 작성했습니다.";
+  if ($result_check->num_rows > 0) {
+    $error = "이미 리뷰를 작성했습니다.";
+  } else {
+    $insert_sql = "INSERT INTO Review (taste, cleanliness, kindness, visited_at, user_id, restaurant_id) VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt_insert = $conn->prepare($insert_sql);
+    $stmt_insert->bind_param("iiisii", $taste, $cleanliness, $kindness, $visited_at, $user_id, $restaurant_id);
+    if ($stmt_insert->execute()) {
+      header("Location: view_restaurant.php?id=" . $restaurant_id);
+      exit;
     } else {
-        $insert_sql = "INSERT INTO Review (taste, cleanliness, kindness, user_id, restaurant_id) VALUES (?, ?, ?, ?, ?)";
-        $stmt_insert = $conn->prepare($insert_sql);
-        $stmt_insert->bind_param("iiiii", $taste, $cleanliness, $kindness, $user_id, $restaurant_id);
-        if ($stmt_insert->execute()) {
-            header("Location: view_restaurant.php?id=" . $restaurant_id);
-            exit;
-        } else {
-            $error = "리뷰 등록 중 오류가 발생했습니다: " . $stmt_insert->error;
-        }
+      $error = "리뷰 등록 중 오류가 발생했습니다: " . $stmt_insert->error;
     }
+  }
 }
 ?>
 
@@ -73,77 +77,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 body{margin:0;background:#fff;color:#111;}
 
 .content-container {
-    padding:20px;
-    display:flex;
-    flex-direction:column;
-    align-items:center; 
-    text-align:center;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:center; 
+  text-align:center;
 }
 
 .header{
-    text-align:center;
-    margin-bottom:40px;
+  text-align:center;
+  margin-bottom:40px;
 }
 .restaurant-name{
-    font-size:40px; 
-    font-weight:900;
-    margin:0 0 10px 0;
+  font-size:40px; 
+  font-weight:900;
+  margin:0 0 10px 0;
 }
 .restaurant-desc{
-    font-size:16px;
-    color:#555;
-    max-width:600px;
-    margin:0 auto;
-    line-height:1.4;
+  font-size:16px;
+  color:#555;
+  max-width:600px;
+  margin:0 auto;
+  line-height:1.4;
 }
 
 form { 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .review-item{
-    display:flex;
-    align-items:center;
-    justify-content: flex-start; 
-    margin:20px 0;
+  display:flex;
+  align-items:center;
+  justify-content: flex-start; 
+  margin:20px 0;
 }
 
 .review-label{
-    font-size:20px;
-    font-weight:600;
-    margin-right:20px;
-    width: 80px; 
-    text-align: center;
-    white-space: nowrap; 
+  font-size:20px;
+  font-weight:600;
+  margin-right:20px;
+  width: 80px; 
+  text-align: center;
+  white-space: nowrap; 
 }
 .review-select{
-    padding:5px 0; 
-    font-size:20px;
-    border:1px solid #ccc;
-    border-radius:4px;
-    width: 100px;
-    text-align: center; 
-    -webkit-appearance: none; 
-    -moz-appearance: none;
-    appearance: none;
-    background-repeat: no-repeat;
-    background-position: right 4px center;
-    background-size: 16px;
-    padding-right: 25px;
+  padding:5px 0; 
+  font-size:20px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  width: 100px;
+  text-align: center; 
+  -webkit-appearance: none; 
+  -moz-appearance: none;
+  appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 16px;
+  padding-right: 25px;
 }
 
 .submit-button{
-    margin-top:50px; 
-    padding:10px 20px;
-    font-size:18px;
-    font-weight:600;
-    cursor:pointer;
-    border:none;
-    background-color:#e0e0e0;
-    color:#000;
-    border-radius:4px;
+  margin-top:50px; 
+  padding:10px 20px;
+  font-size:18px;
+  font-weight:600;
+  cursor:pointer;
+  border:none;
+  background-color:#e0e0e0;
+  color:#000;
+  border-radius:4px;
 }
 .error{color:red;margin-top:10px;}
 </style>
@@ -153,39 +157,42 @@ form {
 
 <div class="content-container">
 <div class="header">
-    <h1 class="restaurant-name"><?php echo htmlspecialchars($restaurant_name); ?></h1>
-    <p class="restaurant-desc"><?php echo htmlspecialchars($restaurant_desc); ?></p>
+  <h1 class="restaurant-name"><?php echo htmlspecialchars($restaurant_name); ?></h1>
+  <p class="restaurant-desc"><?php echo htmlspecialchars($restaurant_desc); ?></p>
 </div>
 
 <?php if(!empty($error)) echo "<p class='error'>{$error}</p>"; ?>
 
 <form method="post">
-  
-    <div class="review-item">
-        <div class="review-label">친절도</div>
-        <select name="kindness" class="review-select" required>
-            <?php for($i=5;$i>=1;$i--): ?> 
-                <option value="<?php echo $i; ?>" <?php echo ($i === 5) ? 'selected' : ''; ?>><?php echo $i; ?></option>             <?php endfor; ?>
-        </select>
-    </div>
+  <div class="review-item">
+    <div class="review-label">방문일</div>
+    <input style="width:200px" type="date" name="visited_at" class="review-select" required>
+  </div>
+  <div class="review-item">
+    <div class="review-label">친절도</div>
+    <select name="kindness" class="review-select" required>
+      <?php for($i=5;$i>=1;$i--): ?> 
+        <option value="<?php echo $i; ?>" <?php echo ($i === 5) ? 'selected' : ''; ?>><?php echo $i; ?></option>             <?php endfor; ?>
+    </select>
+  </div>
 
-    <div class="review-item">
-        <div class="review-label">맛</div>
-        <select name="taste" class="review-select" required>
-            <?php for($i=5;$i>=1;$i--): ?>
-                  <option value="<?php echo $i; ?>" <?php echo ($i === 5) ? 'selected' : ''; ?>><?php echo $i; ?></option>
-            <?php endfor; ?>
-        </select>
-    </div>
+  <div class="review-item">
+    <div class="review-label">맛</div>
+    <select name="taste" class="review-select" required>
+      <?php for($i=5;$i>=1;$i--): ?>
+          <option value="<?php echo $i; ?>" <?php echo ($i === 5) ? 'selected' : ''; ?>><?php echo $i; ?></option>
+      <?php endfor; ?>
+    </select>
+  </div>
 
-    <div class="review-item">
-        <div class="review-label">청결도</div>
-        <select name="cleanliness" class="review-select" required>
-            <?php for($i=5;$i>=1;$i--): ?>
-                  <option value="<?php echo $i; ?>" <?php echo ($i === 5) ? 'selected' : ''; ?>><?php echo $i; ?></option>
-            <?php endfor; ?>
-        </select>
-    </div>
+  <div class="review-item">
+    <div class="review-label">청결도</div>
+    <select name="cleanliness" class="review-select" required>
+      <?php for($i=5;$i>=1;$i--): ?>
+          <option value="<?php echo $i; ?>" <?php echo ($i === 5) ? 'selected' : ''; ?>><?php echo $i; ?></option>
+      <?php endfor; ?>
+    </select>
+  </div>
 
   <button type="submit" class="submit-button">리뷰 등록</button>
 </form>
