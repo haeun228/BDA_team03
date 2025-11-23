@@ -121,6 +121,51 @@ if ($user_id) {
     $is_bookmarked = ($count > 0);
 }
 
+// 지역 내 랭킹
+$sql_region_rank = "
+SELECT r.restaurant_id, DENSE_RANK() OVER (PARTITION BY r.region_id ORDER BY AVG(rv.taste + rv.cleanliness + rv.kindness)/3 DESC) AS region_rank
+FROM Restaurant r
+LEFT JOIN Review rv ON r.restaurant_id = rv.restaurant_id
+WHERE r.region_id = ?
+GROUP BY r.restaurant_id
+";
+$stmt_region_rank = $conn->prepare($sql_region_rank);
+$stmt_region_rank->bind_param("i", $restaurant['region_id']);
+$stmt_region_rank->execute();
+$result_region_rank = $stmt_region_rank->get_result();
+
+$region_rank = null;
+while($row = $result_region_rank->fetch_assoc()) {
+    if($row['restaurant_id'] == $restaurant_id){
+        $region_rank = $row['region_rank'];
+        break;
+    }
+}
+$stmt_region_rank->close();
+
+// 카테고리 내 랭킹
+$sql_category_rank = "
+SELECT r.restaurant_id, DENSE_RANK() OVER (PARTITION BY r.category_id ORDER BY AVG(rv.taste + rv.cleanliness + rv.kindness)/3 DESC) AS category_rank
+FROM Restaurant r
+LEFT JOIN Review rv ON r.restaurant_id = rv.restaurant_id
+WHERE r.category_id = ?
+GROUP BY r.restaurant_id
+";
+$stmt_category_rank = $conn->prepare($sql_category_rank);
+$stmt_category_rank->bind_param("i", $restaurant['category_id']);
+$stmt_category_rank->execute();
+$result_category_rank = $stmt_category_rank->get_result();
+
+$category_rank = null;
+while($row = $result_category_rank->fetch_assoc()) {
+    if($row['restaurant_id'] == $restaurant_id){
+        $category_rank = $row['category_rank'];
+        break;
+    }
+}
+$stmt_category_rank->close();
+
+
 ?>
 <!doctype html>
 <html lang="ko">
@@ -153,6 +198,8 @@ h1.title{margin:0;font-size:36px;line-height:1;font-weight:800;}
 .sub .label{font-size:13px;color:var(--muted);}
 .sub .val{display:flex;align-items:center;gap:4px;font-weight:700;}
 .btn-wrap{margin-left:auto;display:flex;align-items:center;}
+.rank {display:inline-flex;align-items:center;gap: 6px;padding:4px 8px;border-radius:12px;background-color:#F47320;color:#fff;font-size:13px;font-weight: 600;}
+.rank + .rank {margin-left:8px;}
 button.primary{background:#e0e0e0;border:0;padding:10px 14px;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;}
 .star{width:22px;height:22px;fill:#ddd;}
 .star.filled{fill:var(--accent);}
@@ -202,6 +249,19 @@ button.primary{background:#e0e0e0;border:0;padding:10px 14px;border-radius:8px;f
             <path d="M12 .587l3.668 7.431L23.6 9.75l-5.6 5.456L19.335 24 12 19.897 4.665 24l1.335-8.794L.4 9.75l7.932-1.732L12 .587z"/>
           </svg>
         <?php endfor; ?>
+      </div>
+      <div style="width: 20px"></div>
+      <div class="rank">
+        <?php 
+          echo htmlspecialchars($restaurant['region_name']); 
+          echo $region_rank !== null ? " {$region_rank}위" : " (순위 없음)"; 
+        ?>
+      </div>
+      <div class="rank">
+        <?php 
+          echo htmlspecialchars($restaurant['category_name']); 
+          echo $category_rank !== null ? " {$category_rank}위" : " (순위 없음)"; 
+        ?>
       </div>
     </div>
   </div>
