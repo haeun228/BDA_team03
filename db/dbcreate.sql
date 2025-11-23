@@ -58,6 +58,7 @@ CREATE TABLE `Review` (
     `kindness` INT NOT NULL,
     `user_id` BIGINT NOT NULL,
     `restaurant_id` BIGINT NOT NULL,
+
     PRIMARY KEY (`review_id`),
     CONSTRAINT `FK_Review_User` FOREIGN KEY (`user_id`) REFERENCES `User`(`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT `FK_Review_Restaurant` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant`(`restaurant_id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -81,3 +82,6 @@ CREATE TABLE `Closed_Days` (
     PRIMARY KEY (`closed_days_id`),
     CONSTRAINT `FK_ClosedDays_Restaurant` FOREIGN KEY (`restaurant_id`) REFERENCES `Restaurant`(`restaurant_id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+CREATE INDEX idx_review_restaurant ON Review(restaurant_id);
+
