@@ -1,3 +1,6 @@
+<!--
+2271007 강민서
+-->
 <?php
 include("../config.php");
 include ("../menu.php");
@@ -11,6 +14,10 @@ $allowed_columns = ['category_name', 'max_price', 'min_price', 'total_stores', '
 $sort_column = $_GET['sort'] ?? $default_sort_col;
 // 현재 정렬 순서 (GET 요청이 없으면 기본값 사용)
 $sort_order = strtoupper($_GET['order'] ?? $default_order);
+
+// 필터링 값 설정 (Prepared Statement - HAVING)
+// 사용자가 입력한 최소 평균 평점. 입력이 없으면 기본값 0.0
+$min_avg_rating = $_GET['min_rating'] ?? 0.0;
 
 // 요청된 컬럼이 허용 목록에 없거나, 순서가 ASC/DESC가 아니면 기본값으로 재설정
 if (!in_array($sort_column, $allowed_columns) || !in_array($sort_order, ['ASC', 'DESC'])) {
@@ -44,16 +51,20 @@ $sql = "SELECT
         ) rev ON t.restaurant_id = rev.restaurant_id
     GROUP BY 
         c.category_id, c.category_name
+    HAVING 
+        IFNULL(AVG(rev.avg_rating), 0) >= ?  -- 2. HAVING 조건에서도 NULL을 0으로 변환하여 비교
     ORDER BY 
         {$sort_column} {$sort_order};";
 
-$res = mysqli_query($conn, $sql);
+$stmt = $conn->prepare($sql);
+// 4. 바인딩: HAVING 절의 값을 안전하게 전달 (필수)
+// 'd'는 $min_avg_rating이 실수(double/float)임을 나타냅니다.
+$stmt->bind_param("d", $min_avg_rating);
 
-// 쿼리 실패 시 처리
-if (!$res) {
-    // DB 연결 문제일 가능성이 높습니다.
-    die("쿼리 오류: " . mysqli_error($conn) . "<br>SQL: " . $sql);
-}
+// 5. 쿼리 실행 및 결과 처리
+$stmt->execute();
+$res = $stmt->get_result();
+$stmt->close();
 ?>
     <!DOCTYPE html>
     <html lang="ko">
@@ -66,6 +77,20 @@ if (!$res) {
         <h1>메뉴 유형별 통계</h1>
 
         <div class="data-table-wrapper">
+            <form class="input-form" method="get" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" class="filter-form">
+                <label for="min_rating">최소 평균 별점:</label>
+                <input type="number"
+                       id="min_rating"
+                       name="min_rating"
+                       step="0.1"
+                       min="0"
+                       max="5"
+                       value="<?= htmlspecialchars($_GET['min_rating'] ?? '0.0') ?>">
+                <button type="submit">조회</button>
+
+                <input type="hidden" name="sort" value="<?= htmlspecialchars($sort_column) ?>">
+                <input type="hidden" name="order" value="<?= htmlspecialchars($sort_order) ?>">
+            </form>
             <table class="data-table">
                 <thead>
                 <tr>
@@ -126,6 +151,10 @@ if (!$res) {
         document.addEventListener('DOMContentLoaded', () => {
             const sortButtons = document.querySelectorAll('.sort-button');
 
+            // 현재 URL에서 필터링 값 (min_rating)을 가져옵니다.
+            const urlParams = new URLSearchParams(window.location.search);
+            // min_rating은 입력 폼에서 처리하므로 여기서 빈 값 체크는 생략
+
             sortButtons.forEach(button => {
                 button.addEventListener('click', (event) => {
                     event.preventDefault();
@@ -145,17 +174,20 @@ if (!$res) {
                         nextOrder = 'DESC';
                     }
 
-                    // 2. 결정된 순서로 서버에 정렬 요청을 보냅니다. (페이지 새로고침)
+                    // 2. URL 객체를 사용하여 모든 파라미터를 유지하면서 정렬만 변경
+                    urlParams.set('sort', column);
+                    urlParams.set('order', nextOrder);
 
-                    // 🚨 문제 해결 부분: 쿼리 파라미터를 완전히 새로 구성하여 전달
-                    const currentPath = window.location.pathname; // 현재 페이지 경로(/BDA_team03/pages/stats_region.php)
+                    // min_rating 값이 비어 있으면 URL에서 제거하여 깔끔하게 만듭니다.
+                    if (!urlParams.get('min_rating')) {
+                        urlParams.delete('min_rating');
+                    } else if (urlParams.get('min_rating') === '0.0' || urlParams.get('min_rating') === '0') {
+                        // min_rating이 0.0일 경우, URL을 깔끔하게 유지하기 위해 제거합니다. (PHP에서 기본값 0.0으로 설정되어 있기 때문)
+                        urlParams.delete('min_rating');
+                    }
 
-                    // 새 쿼리 문자열 생성
-                    const newQuery = `?sort=${column}&order=${nextOrder}`;
-
-                    // URL을 새로운 경로와 쿼리 문자열로 변경
-                    window.location.href = currentPath + newQuery;
-                    // 예시: /BDA_team03/pages/stats_region.php?sort=max_price&order=DESC
+                    // 최종 URL로 페이지 이동
+                    window.location.href = window.location.pathname + '?' + urlParams.toString();
                 });
             });
         });

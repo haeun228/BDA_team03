@@ -1,3 +1,6 @@
+<!--
+2271018 조하은
+-->
 <?php
 // 유효성 검사
 if (!isset($restaurant_id) || !is_numeric($restaurant_id) || $restaurant_id <= 0) {

@@ -1,5 +1,9 @@
+<!--
+2271018 조하은
+-->
 <?php
 $is_logged_in = $_SESSION['user_id'] ?? false;
+$user_role = $_SESSION['role'] ?? null;
 ?>
 
 <style>
@@ -97,6 +101,7 @@ $is_logged_in = $_SESSION['user_id'] ?? false;
     <a href="../index.php" class="menu-nav-link">홈</a>
     <a href="stats_region.php" class="menu-nav-link">지역별</a>
     <a href="stats_menu_type.php" class="menu-nav-link">유형별</a>
+    <a href="analysis_review.php" class="menu-nav-link">평점 트렌드</a>
   </nav>
 
   <div class="menu-auth-section">
@@ -106,11 +111,16 @@ $is_logged_in = $_SESSION['user_id'] ?? false;
       </svg>
     </a>
     <?php if ($is_logged_in): ?>
-      <a href="bookmark_list.php" class="menu-icon" title="마이페이지">
+      <!-- 로그인 시: USER/ADMIN에 따라 다르게 이동 -->
+      <a 
+        href="<?php echo ($user_role === 'ADMIN') ? './admin_dashboard.php' : 'bookmark_list.php'; ?>" 
+        class="menu-icon" 
+        title="마이페이지">
         <svg class="menu-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.88 6-3.88s5.97 1.89 6 3.88c-1.29 1.94-3.5 3.22-6 3.22z"/>
         </svg>
       </a>
+
       <a href="../handlers/logout.php" class="menu-login-btn menu-logout-btn">로그아웃</a>
     <?php else: ?>
       <a href="login.php" class="menu-login-btn">로그인</a>

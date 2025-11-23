@@ -1,3 +1,6 @@
+<!--
+2271018 조하은
+-->
 <?php
 include_once '../config.php';
 session_start();
@@ -165,7 +168,66 @@ while($row = $result_category_rank->fetch_assoc()) {
 }
 $stmt_category_rank->close();
 
+// WINDOWING 분석
+$period_start = $_GET['start_date'] ?? date('Y-m-d');
+$period_end = $_GET['end_date'] ?? date('Y-m-d');
 
+// HTML 폼의 값 유지를 위한 변수 초기화 (경고 방지)
+$start_date = $_GET['start_date'] ?? ''; 
+$end_date = $_GET['end_date'] ?? ''; 
+
+$windowing_results = [];
+
+$bind_types_window = 'i';
+$bind_params_window = [$restaurant_id];
+
+$sql_review_window = "
+SELECT
+  DATE_FORMAT(visited_at, '%Y년 %m월') AS review_month,
+  AVG(taste) AS avg_taste,
+  AVG(cleanliness) AS avg_cleanliness,
+  AVG(kindness) AS avg_kindness,
+  AVG((taste + cleanliness + kindness)/3) AS avg_overall,
+  AVG(AVG((taste + cleanliness + kindness)/3)) OVER w AS running_avg_overall
+FROM Review
+WHERE restaurant_id = ? 
+  AND visited_at IS NOT NULL
+";
+
+if ($period_start && $period_end) {
+  $sql_review_window .= " AND visited_at BETWEEN ? AND ? ";
+  $bind_types_window .= 'ss';
+  $bind_params_window[] = $period_start;
+  $bind_params_window[] = $period_end;
+}
+
+$sql_review_window .= "
+GROUP BY review_month
+-- 윈도우 정의: review_month 순서대로 누적하여 running_avg를 계산합니다.
+WINDOW w AS (ORDER BY review_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+ORDER BY review_month ASC
+";
+
+$stmt_review_window = $conn->prepare($sql_review_window);
+
+if (!empty($bind_params_window)) {
+  $stmt_review_window->bind_param($bind_types_window, ...$bind_params_window);
+}
+
+$stmt_review_window->execute();
+$result_review_window = $stmt_review_window->get_result();
+
+while ($row = $result_review_window->fetch_assoc()) {
+  $windowing_results[] = [
+    'review_month' => $row['review_month'],
+    'avg_taste' => round($row['avg_taste'], 1),
+    'avg_cleanliness' => round($row['avg_cleanliness'], 1),
+    'avg_kindness' => round($row['avg_kindness'], 1),
+    'avg_overall' => round($row['avg_overall'], 1),
+    'running_avg_overall' => round($row['running_avg_overall'], 1),
+  ];
+}
+$stmt_review_window->close();
 ?>
 <!doctype html>
 <html lang="ko">
@@ -178,7 +240,7 @@ $stmt_category_rank->close();
 <style>
 :root{--accent:#F47320;--muted:#9aa0a6;font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
 body{margin:0;background:#fff;color:#111;}
-.wrap{max-width:980px;margin:60px auto;padding:0 36px;}
+.wrap{max-width:980px;margin:30px auto;padding:0 36px;}
 .top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;}
 .meta{color:var(--muted);font-size:16px;margin-bottom:6px;}
 h1.title{margin:0;font-size:36px;line-height:1;font-weight:800;}
@@ -237,7 +299,14 @@ button.primary{background:#e0e0e0;border:0;padding:10px 14px;border-radius:8px;f
 </div>
 <br>
 <div class="reviews">
-  <div style="font-weight:700; font-size: 18px">리뷰 <span style="font-weight:500;color:var(--muted)">(<?php echo $review['review_count']; ?>)</span></div>
+  <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+    <div style="font-weight:700; font-size: 18px">리뷰 <span style="font-weight:500;color:var(--muted)">(<?php echo $review['review_count']; ?>)</span></div>
+    <div class="btn-wrap">
+      <a href="add_review.php?id=<?php echo $restaurant['restaurant_id']; ?>">
+        <button class="primary">리뷰 등록</button>
+      </a>
+    </div>
+  </div>
   <div class="overall">
     <div class="rating-badge">
       <div class="big-score">
@@ -291,13 +360,56 @@ button.primary{background:#e0e0e0;border:0;padding:10px 14px;border-radius:8px;f
       </div>
     </div>
   </div>
-
-  <div class="btn-wrap">
-    <a href="add_review.php?id=<?php echo $restaurant['restaurant_id']; ?>">
-      <button class="primary">리뷰 등록</button>
-    </a>
-  </div>
 </div>
+<hr style="margin-top: 30px; border-color: #eee;">
+<section style="margin-top: 30px;">
+  <h4>기간별 평점 분석</h4>
+  
+  <form method="GET" style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+    <input type="hidden" name="id" value="<?php echo htmlspecialchars($restaurant_id); ?>">
+    
+    <label for="start_date" style="font-size: 14px; font-weight: 600;">시작일:</label>
+    <input type="date" id="start_date" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>" required>
+    
+    <span>~</span>
+    
+    <label for="end_date" style="font-size: 14px; font-weight: 600;">종료일:</label>
+    <input type="date" id="end_date" name="end_date" value="<?php echo htmlspecialchars($end_date); ?>" required>
+    
+    <button type="submit" style="padding: 8px 12px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+      기간 조회
+    </button>
+  </form>
+  
+  <?php if (!empty($windowing_results)): ?>
+    <table style="width:100%; border-collapse: collapse; table-layout: fixed; font-size:14px; text-align:center; vertical-align:middle; margin-top:15px;">
+      <thead>
+        <tr style="background:#f8f8f8;">
+          <th style="padding:10px; border:1px solid #ddd;">기간</th>
+          <th style="padding:10px; border:1px solid #ddd;">맛</th>
+          <th style="padding:10px; border:1px solid #ddd;">청결도</th>
+          <th style="padding:10px; border:1px solid #ddd;">친절도</th>
+          <th style="padding:10px; border:1px solid #ddd;">전체 평균</th>
+          <th style="padding:10px; border:1px solid #ddd; background-color:#fce8d5;">누적 평균</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($windowing_results as $row): ?>
+        <tr>
+          <td style="padding:10px; border:1px solid #ddd;"><?php echo htmlspecialchars($row['review_month']); ?></td>
+          <td style="padding:10px; border:1px solid #ddd;"><?php echo $row['avg_taste']; ?></td>
+          <td style="padding:10px; border:1px solid #ddd;"><?php echo $row['avg_cleanliness']; ?></td>
+          <td style="padding:10px; border:1px solid #ddd;"><?php echo $row['avg_kindness']; ?></td>
+          <td style="padding:10px; border:1px solid #ddd; font-weight:600;"><?php echo $row['avg_overall']; ?></td>
+          <td style="padding:10px; border:1px solid #ddd; font-weight:600; background-color:#fffaf0;"><?php echo $row['running_avg_overall']; ?></td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  <?php else: ?>
+    <p>선택한 기간 (<?php echo htmlspecialchars($start_date); ?> ~ <?php echo htmlspecialchars($end_date); ?>)에 분석할 데이터가 부족합니다.</p>
+  <?php endif; ?>
+</section>
 </main>
 </body>
 </html>
