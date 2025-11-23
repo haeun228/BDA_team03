@@ -1,3 +1,6 @@
+<!--
+2271018 조하은
+-->
 <?php
 include_once '../config.php';
 session_start();
