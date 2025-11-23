@@ -18,6 +18,11 @@ h1{
     padding: 20px;
     background-color: white;
 }
+
+.input-form{
+    padding-left: 7%;
+}
+
 .data-table {
     width: 85%;
     border-collapse: collapse;
