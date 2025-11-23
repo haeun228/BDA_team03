@@ -1,3 +1,6 @@
+<!--
+2271007 강민서
+-->
 <?php
 include("../config.php");
 include ("../menu.php");
