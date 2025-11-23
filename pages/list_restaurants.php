@@ -1,6 +1,7 @@
 <?php
 // 2276278 정서윤
-// restaurants.php
+// list_restaurants.php
+// 페이지의 기능: 전체 맛집 목록을 지역 및 정렬 기준에 따라 필터링하여 보여줌
 // 기본 색 #f47320
 // 서브 색 #fcc6a2
 
@@ -71,6 +72,7 @@ $dayMap = [
 ];
 $todayEnum = $dayMap[$phpDay];
 
+// Ranking -> 정렬 기준
 if ($currentSortKey === 'bookmark') {
     $orderByForRank = "bookmark_count DESC, avg_rating DESC";
 } else {
@@ -106,6 +108,7 @@ $baseSql= "
     WHERE r.is_active = 1
 ";
 
+// PreparedStatement 파라미터 설정
 $paramTypes = "s";        // 첫 번째 파라미터: $todayEnum (string)
 $params     = [$todayEnum];
 
@@ -119,6 +122,7 @@ if ($currentRegionKey !== 'all') {
 
 $baseSql .= " GROUP BY r.restaurant_id ";
 
+// Ranking 쿼리: RANK() 사용
 $finalSql = "
     SELECT
         sub.*,
@@ -130,6 +134,7 @@ $finalSql = "
     LIMIT 30
 ";
 
+// PredparedStatement로 실행
 $stmt = $conn->prepare($finalSql);
 if (!$stmt) {
     die('PreparedStatement 준비 실패: ' . $conn->error);
