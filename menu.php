@@ -98,6 +98,7 @@ $user_role = $_SESSION['role'] ?? null;
     <a href="../index.php" class="menu-nav-link">홈</a>
     <a href="stats_region.php" class="menu-nav-link">지역별</a>
     <a href="stats_menu_type.php" class="menu-nav-link">유형별</a>
+    <a href="analysis_review.php" class="menu-nav-link">평점 트렌드</a>
   </nav>
 
   <div class="menu-auth-section">
