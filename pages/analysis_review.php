@@ -83,7 +83,7 @@ $is_logged_in = $_SESSION['user_id'] ?? false;
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>서울 맛집 평점 트렌드 분석</title>
+<title>서울 맛집 트렌드 분석</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--accent:#F47320;--muted:#9aa0a6;font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
@@ -111,9 +111,9 @@ th{background:#eee;font-weight:700;}
 <?php include dirname(__DIR__) . '/menu.php'; ?>
 
 <main class="wrap">
-    <h1>📊 서울 맛집 평점 트렌드 분석</h1>
+    <h1> 서울 맛집 트렌드 분석</h1>
     <p>서울 10개 구의 평점 추이를 연도별로 요약하고, 선택한 연도의 분기별 상세 변화를 확인합니다.<br>
-          <strong>원하는 연도를 클릭하면 해당 연도의 분기별 상세 평점을 볼 수 있습니다.</strong></p>
+          원하는 연도를 클릭하면 해당 연도의 분기별 상세 평점을 볼 수 있습니다.</p>
 
     <form method="GET" class="analysis-form">
         <label for="start_year">기간 설정:</label>
@@ -125,7 +125,7 @@ th{background:#eee;font-weight:700;}
 
     <?php if ($selected_year): ?>
         <div class="drilldown-title">
-            📍 <?php echo htmlspecialchars($selected_year); ?>년 서울 10개 구 분기별 상세 평점 비교
+             <?php echo htmlspecialchars($selected_year); ?>년 분기별 평점 비교
         </div>
         <table class="drilldown-table">
             <thead>
@@ -151,12 +151,11 @@ th{background:#eee;font-weight:700;}
         </table>
          <p style="margin-top: 30px;">
             <a href="analysis_review.php?start_year=<?php echo htmlspecialchars($start_year); ?>&end_year=<?php echo htmlspecialchars($end_year); ?>" style="color:#007bff;">
-                ↩️ 다른 연도 결과 보기
+                뒤로가기
             </a>
         </p>
 
     <?php else: ?>
-        <h2>연도별 결과: 서울 전체 연도별 평균 평점 요약</h2>
         <?php if (empty($rollup_results)): ?>
             <p class="info-text">해당 기간에 대한 리뷰 데이터가 없습니다. 기간을 다시 설정해 보세요.</p>
         <?php else: ?>
@@ -165,7 +164,7 @@ th{background:#eee;font-weight:700;}
                 <tr>
                     <th>연도</th>
                     <th>서울 전체 평균 평점</th>
-                    <th>리뷰 수 (총계)</th>
+                    <th>리뷰 수</th>
                 </tr>
             </thead>
             <tbody>
