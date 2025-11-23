@@ -1,3 +1,4 @@
+<!-- 2271012 김다은 -->
 <?php
 include_once '../config.php';
 session_start();
