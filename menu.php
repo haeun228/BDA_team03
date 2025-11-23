@@ -1,3 +1,6 @@
+<!--
+2271018 조하은
+-->
 <?php
 $is_logged_in = $_SESSION['user_id'] ?? false;
 $user_role = $_SESSION['role'] ?? null;
