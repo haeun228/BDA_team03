@@ -25,57 +25,80 @@ while ($row = $category_result->fetch_assoc()) {
 
 // 식당 삽입(신규 생성) 처리
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 트랜잭션 시작
+    $conn->begin_transaction();
 
-    $name = $_POST['name'];
-    $region_id = $_POST['region_id'];
-    $category_id = $_POST['category_id'];
-    $description = $_POST['description'];
-    $open_time = $_POST['start_time'];
-    $close_time = $_POST['end_time'];
-    $holiday = $_POST['holiday'] ?? null;
+    try {
+        $name = $_POST['name'];
+        $region_id = $_POST['region_id'];
+        $category_id = $_POST['category_id'];
+        $description = $_POST['description'];
+        $open_time = $_POST['start_time'];
+        $close_time = $_POST['end_time'];
+        $holidays = $_POST['holiday'] ?? []; // 휴무일이 둘 이상일 경우를 대비해서 배열로 처리
 
-    // 1) 레스토랑 INSERT
-    $sql = "INSERT INTO Restaurant (name, description, region_id, category_id, open_time, close_time)
-            VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssisss", $name, $description, $region_id, $category_id, $open_time, $close_time);
-    $stmt->execute();
-
-    $restaurant_id = $conn->insert_id;
-
-    // 2) 메뉴 INSERT
-    for ($i = 1; $i <= 3; $i++) {
-        $menu_name = $_POST["menu$i"];
-        $price = $_POST["price$i"];
-
-        if (!empty($menu_name) && !empty($price)) {
-            $sql = "INSERT INTO Menu (menu_name, price, restaurant_id) VALUES (?, ?, ?)";
-            $m = $conn->prepare($sql);
-            $m->bind_param("sii", $menu_name, $price, $restaurant_id);
-            $m->execute();
-        }
-    }
-
-    // 3) 휴무일 INSERT
-    $holidays = $_POST['holiday'] ?? []; // 휴무일이 둘 이상일 경우를 대비해서 배열로 처리
-    if (!empty($holidays)) {
-        $sql = "INSERT INTO Closed_days (restaurant_id, day) VALUES (?, ?)";
+        // 1) 레스토랑 INSERT
+        $sql = "INSERT INTO Restaurant (name, description, region_id, category_id, open_time, close_time)
+                VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssisss", $name, $description, $region_id, $category_id, $open_time, $close_time);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Restaurant INSERT failed: " . $stmt->error);
+        }
 
-        foreach ($holidays as $day) {
-            $stmt->bind_param("is", $restaurant_id, $day);
-            $stmt->execute();
-    }
+        $restaurant_id = $conn->insert_id;
+        $stmt->close();
 
-    echo "<script>alert('식당이 성공적으로 등록되었습니다.'); location.href='admin_dashboard.php';</script>";
-    exit;
+        // 2) 메뉴 INSERT
+        for ($i = 1; $i <= 3; $i++) {
+            $menu_name = $_POST["menu$i"];
+            $price = $_POST["price$i"];
+
+            if (!empty($menu_name) && !empty($price)) {
+                $sql = "INSERT INTO Menu (menu_name, price, restaurant_id) VALUES (?, ?, ?)";
+                $stmt_menu = $conn->prepare($sql);
+                $stmt_menu->bind_param("sii", $menu_name, $price, $restaurant_id);
+                
+                if (!$stmt_menu->execute()) {
+                    throw new Exception("Menu INSERT failed: " . $stmt_menu->error);
+                }
+                $stmt_menu->close();
+            }
+        }
+
+        // 3) 휴무일 INSERT
+        if (!empty($holidays)) {
+            $sql = "INSERT INTO Closed_days (restaurant_id, day) VALUES (?, ?)";
+            $stmt_closed = $conn->prepare($sql);
+
+            foreach ($holidays as $day) {
+                $stmt_closed->bind_param("is", $restaurant_id, $day);
+                
+                if (!$stmt_closed->execute()) {
+                    throw new Exception("Closed_days INSERT failed: " . $stmt_closed->error);
+                }
+            }
+            $stmt_closed->close();
+        }
+
+        // 모든 작업 성공 시 트랜잭션 확정
+        $conn->commit();
+        echo "<script>alert('새로운 식당이 성공적으로 등록되었습니다.'); location.href='admin_dashboard.php';</script>";
+        exit;
+
+    } catch (Exception $e) {
+        // 오류 발생 시 트랜잭션 롤백
+        $conn->rollback();
+        error_log("식당 등록 트랜잭션 실패: " . $e->getMessage());
+        echo "<script>alert('식당 등록 중 오류가 발생했습니다. 식당이 등록되지 않았습니다.'); location.href='add_restaurant.php';</script>";
+        exit;
     }
 }
 ?>
 
 <?php
-if (isset($stmt)) $stmt->close();
-$conn->close();
+if (isset($conn)) { $conn->close(); }
 ?>
 
 <!DOCTYPE html>
@@ -304,7 +327,7 @@ input[type=number]::-webkit-outer-spin-button {
 
                 foreach ($days as $value => $label): ?>
                     <label class="holiday-item">
-                        <input type="checkbox" name="holiday[]" value="<?= $value ?>">
+                        <input type="checkbox" name="closed[]" value="<?= $value ?>">
                         <span class="checkmark"></span>
                         <?= $label ?>
                     </label>
