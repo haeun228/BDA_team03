@@ -22,7 +22,6 @@ CREATE TABLE `Restaurant` (
     `close_time` TIME NOT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `is_active` BOOLEAN DEFAULT TRUE,
     PRIMARY KEY (`restaurant_id`),
     CONSTRAINT `FK_Restaurant_Region` FOREIGN KEY (`region_id`) REFERENCES `Region`(`region_id`),
     CONSTRAINT `FK_Restaurant_Category` FOREIGN KEY (`category_id`) REFERENCES `Category`(`category_id`)
@@ -33,7 +32,6 @@ CREATE TABLE `Menu` (
     `menu_name` VARCHAR(255) NOT NULL,
     `price` INT NOT NULL,
     `restaurant_id` BIGINT NOT NULL,
-    `is_active` BOOLEAN DEFAULT TRUE,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`menu_id`),
@@ -47,7 +45,6 @@ CREATE TABLE `User` (
     `username` VARCHAR(255) NOT NULL,
 		`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `is_active` BOOLEAN DEFAULT TRUE,
     PRIMARY KEY (`user_id`)
 );
 
