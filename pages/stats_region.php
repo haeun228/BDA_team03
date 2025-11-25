@@ -3,7 +3,7 @@
 -->
 <?php
 include("../config.php");
-include ("../menu.php");
+include ("../components/header.php");
 
 // 1. GET 요청 변수 초기화 및 정리 (SQL 인젝션 방지 포함)
 $default_sort_col = 'region_name';

@@ -43,7 +43,7 @@ h1{font-size:24px;padding:0 20px 20px;border-bottom:1px solid #eee;margin:0;}
 </style>
 </head>
 <body>
-<?php include '../menu.php'; ?>
+<?php include '../components/header.php'; ?>
 
 <main class="wrap">
     <h1>최근 조회한 식당 (<?php echo $list_count; ?>개)</h1>

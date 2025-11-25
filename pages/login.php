@@ -117,7 +117,7 @@ body {
 </head>
 <body>
 
-<?php include '../menu.php'; ?>
+<?php include '../components/header.php'; ?>
 
 <div class="login-box">
 

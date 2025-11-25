@@ -230,7 +230,7 @@ input[type=number]::-webkit-outer-spin-button {
 </head>
 <body>
 
-<?php include '../menu.php'; ?>
+<?php include '../components/header.php'; ?>
 
 <div class="form-container">
     <h2>식당 등록</h2>
