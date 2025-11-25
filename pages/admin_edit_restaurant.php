@@ -93,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
         // 2) 메뉴 UPDATE
-        // 🚨 상단에서 가져온 $menus 변수를 $existing_menus로 재사용하여 중복 조회 제거
         $existing_menus = $menus;
 
         for ($i = 0; $i < 3; $i++) {
