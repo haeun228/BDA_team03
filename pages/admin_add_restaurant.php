@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $description = $_POST['description'];
         $open_time = $_POST['start_time'];
         $close_time = $_POST['end_time'];
-        $holidays = $_POST['holiday'] ?? []; // 휴무일이 둘 이상일 경우를 대비해서 배열로 처리
+        $closed_days = $_POST['closed'] ?? []; // 휴무일이 둘 이상일 경우를 대비해서 배열로 처리
 
         // 1) 레스토랑 INSERT
         $sql = "INSERT INTO Restaurant (name, description, region_id, category_id, open_time, close_time)
@@ -68,11 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // 3) 휴무일 INSERT
-        if (!empty($holidays)) {
+        if (!empty($closed_days)) {
             $sql = "INSERT INTO Closed_days (restaurant_id, day) VALUES (?, ?)";
             $stmt_closed = $conn->prepare($sql);
 
-            foreach ($holidays as $day) {
+            foreach ($closed_days as $day) {
                 $stmt_closed->bind_param("is", $restaurant_id, $day);
                 
                 if (!$stmt_closed->execute()) {
