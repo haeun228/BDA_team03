@@ -271,7 +271,7 @@ button.primary{background:#e0e0e0;border:0;padding:10px 14px;border-radius:8px;f
 <script src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"></script>
 </head>
 <body>
-<?php include '../menu.php'; ?>
+<?php include '../components/header.php'; ?>
 <main class="wrap">
 <div class="top-row">
   <div style="flex:1;">

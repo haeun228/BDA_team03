@@ -153,7 +153,7 @@ form {
 </style>
 </head>
 <body>
-<?php include '../menu.php'; ?>
+<?php include '../components/header.php'; ?>
 
 <div class="content-container">
 <div class="header">

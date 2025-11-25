@@ -159,7 +159,7 @@ body {
 </head>
 <body>
 
-<?php include '../menu.php'; ?>
+<?php include '../components/header.php'; ?>
 
 <div class="dashboard-container">
     <h1 class="dashboard-title">식당 관리</h1>

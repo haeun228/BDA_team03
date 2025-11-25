@@ -352,7 +352,7 @@ $now = date('H:i:s');
 </head>
 <body>
 
-<?php include dirname(__DIR__) . '/menu.php'; ?>
+<?php include '../components/header.php'; ?>
 
 <div class="page-wrapper">
     <!-- 지도 로고(지역) + 정렬 드롭다운 -->

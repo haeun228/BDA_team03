@@ -1,4 +1,5 @@
 <!-- 2271012 김다은 -->
+
 <?php
 include_once '../config.php';
 session_start();
@@ -16,7 +17,9 @@ if (!$restaurant_id) {
     exit;
 }
 
-// 지역, 메뉴 유형 가져오기
+// --- 데이터 조회 (GET) 부분: 모두 Prepared Statement 사용 ---
+
+// 지역, 메뉴 유형 가져오기 (변동 없음)
 $regions = [];
 $categories = [];
 
@@ -24,97 +27,133 @@ $region_result = $conn->query("SELECT region_id, region_name FROM region");
 while ($row = $region_result->fetch_assoc()) {
     $regions[] = $row;
 }
-
 $category_result = $conn->query("SELECT category_id, category_name FROM category");
 while ($row = $category_result->fetch_assoc()) {
     $categories[] = $row;
 }
 
-// 식당 정보 가져오기
-$stmt = $conn->prepare("SELECT * FROM restaurant WHERE restaurant_id = ?");
-$stmt->bind_param("i", $restaurant_id);
-$stmt->execute();
-$result = $stmt->get_result();
+// 식당 정보 가져오기 (Prepared Statement 사용)
+$stmt_r = $conn->prepare("SELECT * FROM restaurant WHERE restaurant_id = ?");
+$stmt_r->bind_param("i", $restaurant_id);
+$stmt_r->execute();
+$result = $stmt_r->get_result();
 $restaurant = $result->fetch_assoc();
+$stmt_r->close();
+
 if (!$restaurant) {
     echo "<p>식당을 찾을 수 없습니다.</p>";
     exit;
 }
 
-// 메뉴 정보 가져오기
-$menu_result = $conn->query("SELECT * FROM Menu WHERE restaurant_id = $restaurant_id");
-$menus = [];
+// 메뉴 정보 가져오기 (Prepared Statement 사용)
+$stmt_m = $conn->prepare("SELECT * FROM Menu WHERE restaurant_id = ? ORDER BY menu_id");
+$stmt_m->bind_param("i", $restaurant_id);
+$stmt_m->execute();
+$menu_result = $stmt_m->get_result();
+$menus = []; // 폼을 채우기 위한 기존 메뉴 정보
 while ($row = $menu_result->fetch_assoc()) {
     $menus[] = $row;
 }
+$stmt_m->close();
 
-// 휴무일 정보 가져오기
-$closed_result = $conn->query("SELECT day FROM Closed_Days WHERE restaurant_id = $restaurant_id");
-$closeds = [];
+// 휴무일 정보 가져오기 (Prepared Statement 사용)
+$stmt_c = $conn->prepare("SELECT day FROM Closed_Days WHERE restaurant_id = ?");
+$stmt_c->bind_param("i", $restaurant_id);
+$stmt_c->execute();
+$closed_result = $stmt_c->get_result();
+$closeds = []; // 폼을 채우기 위한 기존 휴무일 목록
 while ($row = $closed_result->fetch_assoc()) {
     $closeds[] = $row['day'];
 }
+$stmt_c->close();
 
-// 식당 정보 수정 처리
+
+// --- 식당 정보 수정 처리 (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 트랜잭션 시작
+    $conn->begin_transaction();
 
-    $name = $_POST['name'];
-    $region_id = $_POST['region_id'];
-    $category_id = $_POST['category_id'];
-    $description = $_POST['description'];
-    $open_time = $_POST['start_time'];
-    $close_time = $_POST['end_time'];
-    $closed_days = $_POST['closed'] ?? []; // 배열 (휴무일 여러 요일 가능)
+    try {
+        $name = $_POST['name'];
+        $region_id = $_POST['region_id'];
+        $category_id = $_POST['category_id'];
+        $description = $_POST['description'];
+        $open_time = $_POST['start_time'];
+        $close_time = $_POST['end_time'];
+        $closed_days = $_POST['closed'] ?? []; // 새로 체크된 휴무일 (배열)
 
-    // 1) 식당 테이블 내 정보 업데이트
-    $sql = "UPDATE Restaurant SET name=?, description=?, region_id=?, category_id=?, open_time=?, close_time=? WHERE restaurant_id=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssisssi", $name, $description, $region_id, $category_id, $open_time, $close_time, $restaurant_id);
-    $stmt->execute();
-
-    // 2) 메뉴 테이블 내 정보 업데이트
-    $menu_result = $conn->query("SELECT * FROM Menu WHERE restaurant_id=$restaurant_id ORDER BY menu_id");
-    $existing_menus = $menu_result->fetch_all(MYSQLI_ASSOC);
-
-    for ($i = 0; $i < 3; $i++) {
-        $menu_name = $_POST["menu" . ($i+1)];
-        $price = $_POST["price" . ($i+1)];
-        if (!empty($menu_name) && !empty($price)) {
-            $stmt = $conn->prepare("UPDATE Menu SET menu_name=?, price=? WHERE menu_id=?");
-            $stmt->bind_param("sii", $menu_name, $price, $existing_menus[$i]['menu_id']);
-            $stmt->execute();
+        // 1) 식당 UPDATE
+        $sql = "UPDATE Restaurant SET name=?, description=?, region_id=?, category_id=?, open_time=?, close_time=? WHERE restaurant_id=?";
+        $stmt_r_update = $conn->prepare($sql); // $stmt 대신 $stmt_r_update 사용
+        $stmt_r_update->bind_param("ssisssi", $name, $description, $region_id, $category_id, $open_time, $close_time, $restaurant_id);
+        if (!$stmt_r_update->execute()) {
+             throw new Exception("Restaurant UPDATE failed: " . $stmt_r_update->error);
         }
-    }
+        $stmt_r_update->close();
 
-    // 3) 휴무일 테이블 내 정보 업데이트 (삽입 또는 삭제)
-    // 기존 휴무일
-    $existing_days = [];
-    $result = $conn->query("SELECT day FROM Closed_Days WHERE restaurant_id=$restaurant_id");
-    while ($row = $result->fetch_assoc()) {
-        $existing_days[] = $row['day'];
-    }
 
-    // 기존 휴무일 X, 체크 O -> 추가(INSERT)
-    foreach ($closed_days as $day) {
-        if (!in_array($day, $existing_days)) {
-            $stmt = $conn->prepare("INSERT INTO Closed_Days (restaurant_id, day) VALUES (?, ?)");
-            $stmt->bind_param("is", $restaurant_id, $day);
-            $stmt->execute();
+        // 2) 메뉴 UPDATE
+        $existing_menus = $menus;
+
+        for ($i = 0; $i < 3; $i++) {
+            $menu_name = $_POST["menu" . ($i+1)];
+            $price = $_POST["price" . ($i+1)];
+            
+            if (isset($existing_menus[$i]['menu_id']) && !empty($menu_name) && !empty($price)) {
+                $sql = "UPDATE Menu SET menu_name=?, price=? WHERE menu_id=?";
+                $stmt_menu = $conn->prepare($sql);
+                $stmt_menu->bind_param("sii", $menu_name, $price, $existing_menus[$i]['menu_id']);
+                
+                if (!$stmt_menu->execute()) {
+                    throw new Exception("Menu UPDATE failed: " . $stmt_menu->error);
+                }
+                $stmt_menu->close();
+            } 
         }
-    }
 
-    // 기존 휴무일 O, 체크 X -> 삭제(DELETE)
-    foreach ($existing_days as $day) {
-        if (!in_array($day, $closed_days)) {
-            $stmt = $conn->prepare("DELETE FROM Closed_Days WHERE restaurant_id=? AND day=?");
-            $stmt->bind_param("is", $restaurant_id, $day);
-            $stmt->execute();
+        // 3) 휴무일 UPDATE (INSERT / DELETE로 처리)
+        // 🚨 상단에서 가져온 $closeds 변수를 $existing_days로 재사용하여 중복 조회 제거
+        $existing_days = $closeds; 
+        
+        $stmt_closed_insert = $conn->prepare("INSERT INTO Closed_Days (restaurant_id, day) VALUES (?, ?)");
+        $stmt_closed_delete = $conn->prepare("DELETE FROM Closed_Days WHERE restaurant_id=? AND day=?");
+
+        // 기존 휴무일 X, 체크 O -> 추가(INSERT)
+        foreach ($closed_days as $day) {
+            if (!in_array($day, $existing_days)) {
+                $stmt_closed_insert->bind_param("is", $restaurant_id, $day);
+                if (!$stmt_closed_insert->execute()) {
+                    throw new Exception("Closed_Days INSERT failed: " . $stmt_closed_insert->error);
+                }
+            }
         }
+
+        // 기존 휴무일 O, 체크 X -> 삭제(DELETE)
+        foreach ($existing_days as $day) {
+            if (!in_array($day, $closed_days)) {
+                $stmt_closed_delete->bind_param("is", $restaurant_id, $day);
+                if (!$stmt_closed_delete->execute()) {
+                    throw new Exception("Closed_Days DELETE failed: " . $stmt_closed_delete->error);
+                }
+            }
+        }
+        
+        $stmt_closed_insert->close();
+        $stmt_closed_delete->close();
+
+
+        // 모든 작업 성공 시 트랜잭션 확정
+        $conn->commit();
+        echo "<script>alert('식당 정보가 성공적으로 수정되었습니다.'); location.href='admin_dashboard.php';</script>";
+        exit;
+
+    } catch (Exception $e) {
+        // 오류 발생 시 트랜잭션 롤백
+        $conn->rollback();
+        error_log("식당 정보 수정 실패 (ID: $restaurant_id): " . $e->getMessage());
+        echo "<script>alert('식당 정보 수정 중 오류가 발생했습니다. 모든 변경사항이 취소되었습니다.'); location.href='admin_edit_restaurant.php?id={$restaurant_id}';</script>";
+        exit;
     }
-
-
-    echo "<script>alert('식당 정보가 수정되었습니다.'); location.href='admin_dashboard.php';</script>";
-    exit;
 }
 ?>
 
@@ -269,7 +308,7 @@ input[type=number]::-webkit-outer-spin-button {
 
 <body>
 
-<?php include '../menu.php'; ?>
+<?php include '../components/header.php'; ?>
 
 <div class="form-container">
     <h2>식당 수정</h2>

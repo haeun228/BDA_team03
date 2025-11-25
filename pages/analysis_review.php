@@ -109,7 +109,7 @@ th{background:#eee;font-weight:700;}
 </head>
 <body>
 
-<?php include dirname(__DIR__) . '/menu.php'; ?>
+<?php include '../components/header.php'; ?>
 
 <main class="wrap">
     <h1> 서울 맛집 트렌드 분석</h1>

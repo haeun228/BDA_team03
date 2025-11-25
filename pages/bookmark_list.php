@@ -72,7 +72,7 @@ h1{font-size:24px;padding:20px;border-bottom:1px solid #eee;margin:0;}
 </style>
 </head>
 <body>
-<?php include '../menu.php'; ?>
+<?php include '../components/header.php'; ?>
 <main class="wrap">
   <h1>내 북마크</h1>
 
