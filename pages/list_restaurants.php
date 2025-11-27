@@ -174,7 +174,7 @@ $now = date('H:i:s');
         body {
             margin: 0;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background-color: #f7f7f7;
+            background-color: #ffffff;
         }
         .header {
             display: flex;
