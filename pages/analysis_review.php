@@ -88,7 +88,7 @@ $is_logged_in = $_SESSION['user_id'] ?? false;
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--accent:#F47320;--muted:#9aa0a6;font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-body{margin:0;background:#f4f4f4;color:#111;}
+body{margin:0;background:#ffffff;color:#111;}
 .wrap{max-width:900px;margin:50px auto;background:#fff;padding:30px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.1);}
 h1{color:#111;margin-top:0;font-size:26px;}
 
@@ -109,7 +109,7 @@ th{background:#eee;font-weight:700;}
 </head>
 <body>
 
-<?php include '../components/header.php'; ?>
+<?php include dirname(__DIR__) . '/components/header.php'; ?>
 
 <main class="wrap">
     <h1> 서울 맛집 트렌드 분석</h1>
