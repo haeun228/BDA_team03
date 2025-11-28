@@ -16,7 +16,7 @@ SELECT r.*, c.category_name, reg.region_name
 FROM Restaurant r
 JOIN Category c ON r.category_id = c.category_id
 JOIN Region reg ON r.region_id = reg.region_id
-WHERE r.restaurant_id = ? AND r.is_active = 1
+WHERE r.restaurant_id = ?
 ";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $restaurant_id);
@@ -58,7 +58,7 @@ $_SESSION['recently_viewed'] = $recently_viewed;
 
 
 // 메뉴 가져오기
-$sql_menu = "SELECT menu_name, price FROM Menu WHERE restaurant_id = ? AND is_active = 1";
+$sql_menu = "SELECT menu_name, price FROM Menu WHERE restaurant_id = ?";
 $stmt_menu = $conn->prepare($sql_menu);
 $stmt_menu->bind_param("i", $restaurant_id);
 $stmt_menu->execute();
