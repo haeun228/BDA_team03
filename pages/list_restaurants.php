@@ -93,7 +93,6 @@ $baseSql= "
         c.category_name,
         r.open_time,
         r.close_time,
-        r.is_active,
         IFNULL(AVG((rv.taste + rv.cleanliness + rv.kindness) / 3.0), 0) AS avg_rating,
         COUNT(DISTINCT bm.bookmark_id) AS bookmark_count,
         CASE WHEN cd.closed_days_id IS NOT NULL THEN 1 ELSE 0 END AS is_closed_today
@@ -105,7 +104,6 @@ $baseSql= "
     LEFT JOIN Closed_Days cd 
            ON cd.restaurant_id = r.restaurant_id 
           AND cd.day = ?
-    WHERE r.is_active = 1
 ";
 
 // PreparedStatement 파라미터 설정
