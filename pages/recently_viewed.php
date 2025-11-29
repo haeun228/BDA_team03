@@ -57,7 +57,7 @@ h1{font-size:24px;padding:0 20px 20px;border-bottom:1px solid #eee;margin:0;}
         ?>
             <div class="restaurant-item">
                 <div class="restaurant-info">
-                    <a href="view_restaurant.php?restaurant_id=<?php echo $id; ?>">
+                    <a href="view_restaurant.php?id=<?php echo $id; ?>">
                         <?php echo $name; ?>
                     </a>
                     <span class="restaurant-region">
