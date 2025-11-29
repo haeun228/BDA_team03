@@ -89,7 +89,7 @@ h1{font-size:24px;padding:20px;border-bottom:1px solid #eee;margin:0;}
     ?>
       <div class="restaurant-item">
         <div class="restaurant-info">
-          <a href="view_restaurant.php?restaurant_id=<?php echo $restaurant_id; ?>" class="restaurant-name">
+          <a href="view_restaurant.php?id=<?php echo $restaurant_id; ?>" class="restaurant-name">
             <?php echo htmlspecialchars($restaurant['name']); ?>
           </a>
           <span class="restaurant-region">
