@@ -104,6 +104,7 @@ $baseSql= "
     LEFT JOIN Closed_Days cd 
            ON cd.restaurant_id = r.restaurant_id 
           AND cd.day = ?
+    WHERE 1=1
 ";
 
 // PreparedStatement 파라미터 설정
