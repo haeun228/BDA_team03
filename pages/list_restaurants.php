@@ -479,6 +479,7 @@ $now = date('H:i:s');
     document.addEventListener('click', function () {
         document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
     });
+    
 </script>
 </div>
 
